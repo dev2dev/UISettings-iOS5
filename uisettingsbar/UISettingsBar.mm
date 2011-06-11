@@ -126,4 +126,28 @@ static Hook* sHook=nil;
     return 87.0f;
 }
 
+- (id)launchURLForTapLocation:(CGPoint)point
+{
+	// Dirty hack to fix the "TouchHandler" bug.
+	NSLog(@"Here We Are. %@ - %@", NSStringFromCGPoint([[self view].window convertPoint:point fromView:[self view]]), NSStringFromCGPoint(point));
+	UIButton* btn=(UIButton*)[[self view].window hitTest:[[self view].window convertPoint:point fromView:[self view]] withEvent:nil];
+	if([btn respondsToSelector:@selector(sendActionsForControlEvents:)]){
+		[btn sendActionsForControlEvents: UIControlEventTouchUpInside];
+	}
+	return nil;
+}
+/*
+- (void)willAnimateRotationToInterfaceOrientation:(int)arg1
+{
+	if (UIInterfaceOrientationIsLandscape(arg1)) {
+		CGRect rect=[self view].bounds;
+		rect.size.width=476;
+		[self view].bounds=rect;
+	} else {
+		CGRect rect=[self view].bounds;
+		rect.size.width=316;
+		[self view].bounds=rect;
+	}
+}
+*/
 @end

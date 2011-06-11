@@ -186,16 +186,17 @@ static UISettingsToggleController* sharedIInstance = nil;
 }
 -(void)load
 {
-	@try {
+//	@try {
 	toggleWindow=[[objc_getClass("SBUIController") sharedInstance] performSelector:@selector(window)];
-	}
-	@catch (id e)
+//	}
+/*	@catch (id e)
 	{
 	toggleWindow=[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	toggleWindow.windowLevel = (unsigned int)-1;
 	toggleWindow.hidden = NO;
 	toggleWindow.userInteractionEnabled = NO;
 	}
+*/
 }
 #pragma mark coreDispatcher
 -(void)coreDispatcher:(UIButton*)sender {
@@ -246,7 +247,7 @@ static UISettingsToggleController* sharedIInstance = nil;
 	myButton.frame = [self autoRect];
 	myButton.tag=0;
 	[myButton setTitle:title forState:UIControlStateNormal];
-	[myButton addTarget:self action:@selector(coreDispatcher:) forControlEvents:UIControlStateSelected];
+	[myButton addTarget:self action:@selector(coreDispatcher:) forControlEvents:UIControlEventTouchUpInside];
 	[toggleContainer addSubview:myButton];
 	NSArray* dispatcherElement=[[NSArray alloc] initWithObjects:myButton,NSStringFromSelector(action), target, nil];
 	[dispatcherArray addObject:dispatcherElement];
@@ -257,7 +258,7 @@ static UISettingsToggleController* sharedIInstance = nil;
 {
 	id hokr = [UISettingsCore sharedSettings];
 	toggleContainer=MSHookIvar<UIScrollView*>(hokr, "toggleContainer"); // b00m
-	UILabel *lbel = [ [UILabel alloc ] initWithFrame:CGRectMake(0.0, 0.0, 54.0, 24.0) ];
+	UILabel *lbel = [[UILabel alloc] initWithFrame:CGRectMake(0.0, 0.0, 54.0, 24.0)];
 	lbel.textAlignment =  UITextAlignmentCenter;
 	lbel.textColor = [UIColor whiteColor];
 	lbel.backgroundColor = [UIColor clearColor];
@@ -291,6 +292,6 @@ static UISettingsToggleController* sharedIInstance = nil;
 	// Check for WinterBoard
 	UIImage* iconFromWinterboard=[UIImage imageNamed:[@"UISettings_" stringByAppendingString:name]];
 	if(iconFromWinterboard) return iconFromWinterboard;
-	return [UIImage imageWithContentsOfFile:[@"/Library/UISettings/Icons/" stringByAppendingString:name]];
+	return [[UIImage imageWithContentsOfFile:[@"/Library/UISettings/Icons/" stringByAppendingString:name]] retain];
 }
 @end
