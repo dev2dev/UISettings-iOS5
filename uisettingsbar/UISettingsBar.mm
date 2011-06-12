@@ -1,4 +1,5 @@
 #import "notify.h"
+#import "fakesubstrate.h"
 #import <objc/runtime.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>

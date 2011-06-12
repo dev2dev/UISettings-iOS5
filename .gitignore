@@ -2,4 +2,5 @@ _
 uihook
 .DS_Store
 *.deb
+.theos
 

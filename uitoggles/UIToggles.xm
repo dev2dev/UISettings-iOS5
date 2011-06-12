@@ -2,7 +2,7 @@
 #import "UIToggles.h"
 #import <GraphicsServices/GraphicsServices.h>
 #import "MediaPlayer/MediaPlayer.h"
-#import "substrate.h"
+#import "fakesubstrate.h"
 #import "UIToggle.h"
 static UIActionSheet* alert=nil;
 static id airplane_on=nil;
@@ -157,17 +157,11 @@ void updateWiFi()
 
 // Hooks for the SpringBoard class
 
-static id __sb=nil;
 %hook SpringBoard
-- (id)init
-{
-	__sb=self;
-	return %orig;
-}
 %new(@@:)
 + (id)sharedBoard
 {
-	return __sb;
+	return [UIApplication sharedApplication];
 }
 %end
 

@@ -1,6 +1,6 @@
 #import <dlfcn.h>
 #import <SpringBoard/SpringBoard.h>
-#include "substrate.h"
+#include "fakesubstrate.h"
 #import "notify.h"
 @interface SBIconView : SBIcon {}
 @end
