@@ -111,7 +111,7 @@ static Hook* sHook=nil;
     if (_view == nil)
     {
         _view = [[UIView alloc] initWithFrame:CGRectMake(2, 0, 316, [self viewHeight])];
-        UIImage *bg = [UIImage imageWithContentsOfFile:@"/System/Library/WeeAppPlugins/UISettingsBar.bundle/UISettingsBackground.png"];
+        UIImage *bg = [[UIImage imageWithContentsOfFile:@"/System/Library/WeeAppPlugins/UISettingsBar.bundle/UISettingsBackground.png"] stretchableImageWithLeftCapWidth:15 topCapHeight:[self viewHeight]];
         UIImageView *bgView = [[UIImageView alloc] initWithImage:bg];
         bgView.frame = CGRectMake(0, 0, 316, [self viewHeight]);
         [_view addSubview:bgView];
@@ -136,18 +136,27 @@ static Hook* sHook=nil;
 	}
 	return nil;
 }
-/*
+
 - (void)willAnimateRotationToInterfaceOrientation:(int)arg1
 {
 	if (UIInterfaceOrientationIsLandscape(arg1)) {
-		CGRect rect=[self view].bounds;
+		CGRect rect=[self view].frame;
 		rect.size.width=476;
-		[self view].bounds=rect;
+		[self view].frame=rect;
+		for(UIView* v__ in [[self view] subviews]){
+	                CGRect rect=v__.frame;
+        	        rect.size.width=476;
+                	v__.frame=rect;
+		}
 	} else {
-		CGRect rect=[self view].bounds;
+		CGRect rect=[self view].frame;
 		rect.size.width=316;
-		[self view].bounds=rect;
+		[self view].frame=rect;
+		for(UIView* v__ in [[self view] subviews]){
+	                CGRect rect=v__.frame;
+        	        rect.size.width=316;
+                	v__.frame=rect;
+		}
 	}
 }
-*/
 @end
