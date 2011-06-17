@@ -1,9 +1,12 @@
+#import <notify.h>
+#import <CoreFoundation/CoreFoundation.h>
 #import <unistd.h>
 #import "UIToggles.h"
 #import <GraphicsServices/GraphicsServices.h>
 #import "MediaPlayer/MediaPlayer.h"
 #import "fakesubstrate.h"
 #import "UIToggle.h"
+void updateWiFi();
 static UIActionSheet* alert=nil;
 static id airplane_on=nil;
 static id airplane_off=nil;
@@ -14,6 +17,9 @@ static id bluetooth=nil;
 static id wifi_on=nil;
 static id wifi_off=nil;
 static id wifi=nil;
+static id loc_on=nil;
+static id loc_off=nil;
+static id loc=nil;
 @interface UIToggles_ToggleController : NSObject < UIActionSheetDelegate >
 {
 }
@@ -80,6 +86,7 @@ static id wifi=nil;
 	id wifi_manager=[objc_getClass("SBWiFiManager") sharedInstance];
 	BOOL wifiStatus=[wifi_manager wiFiEnabled];
         BOOL airstatus=[[objc_getClass("SBTelephonyManager") sharedTelephonyManagerCreatingIfNecessary:YES] isInAirplaneMode];
+	BOOL locstatus=[objc_getClass("CLLocationManager") locationServicesEnabled];
 	if(wifiStatus){
 		[wifi setImage:wifi_on forState:UIControlStateNormal];
 	} else {
@@ -96,6 +103,11 @@ static id wifi=nil;
         } else {
                 [airplane setImage:airplane_off forState:UIControlStateNormal];
         }
+        if(locstatus){
+                [loc setImage:loc_on forState:UIControlStateNormal];
+        } else {
+                [loc setImage:loc_off forState:UIControlStateNormal];
+        }
 }
 
 -(void)shut
@@ -106,6 +118,12 @@ static id wifi=nil;
 -(void)reboot
 {
         [[objc_getClass("SpringBoard") sharedBoard] reboot];
+}
+
+-(void)location
+{
+	[objc_getClass("CLLocationManager") setLocationServicesEnabled:![objc_getClass("CLLocationManager") locationServicesEnabled]];
+	updateWiFi();
 }
 
 -(void)airplane
@@ -137,6 +155,10 @@ void updateWiFi()
 	bluetooth_off=[handler iconWithName:@"no_bluetooth.png"];
 	bluetooth=[handler createToggleWithAction:@selector(bt) title:nil target:toggleController];
 	[handler createLabelForButton:bluetooth text:@"Bluetooth"];
+	loc_on=[handler iconWithName:@"location.png"];
+	loc_off=[handler iconWithName:@"no_location.png"];
+	loc=[handler createToggleWithAction:@selector(location) title:nil target:toggleController];
+	[handler createLabelForButton:loc text:@"Location"];
 	airplane_on=[handler iconWithName:@"airplane.png"];
 	airplane_off=[handler iconWithName:@"no_airplane.png"];
 	airplane=[handler createToggleWithAction:@selector(airplane) title:nil target:toggleController];
@@ -153,6 +175,7 @@ void updateWiFi()
 	[handler createToggleWithTitle:@"Power Off" andImage:@"shutoff.png" andSelector:@selector(shut) toTarget:toggleController];
 	[handler createToggleWithTitle:@"Reboot" andImage:@"reboot.png" andSelector:@selector(reboot) toTarget:toggleController];
 	updateWiFi();
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void (*)(CFNotificationCenterRef, void *, CFStringRef, const void *, CFDictionaryRef))updateWiFi, CFSTR("com.apple.locationd/Prefs"), NULL, CFNotificationSuspensionBehaviorHold);
 }
 
 // Hooks for the SpringBoard class

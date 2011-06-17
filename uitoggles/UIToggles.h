@@ -1,3 +1,12 @@
+@interface CLLocationManager : NSObject
+{
+    id _internal;
+}
+
++ (id)sharedManager;
++ (BOOL)locationServicesEnabled;
++ (void)setLocationServicesEnabled:(BOOL)arg1;
+@end
 @class SBPowerDownView;
 @interface BluetoothManager : NSObject {
 }
