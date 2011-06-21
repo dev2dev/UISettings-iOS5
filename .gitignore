@@ -4,3 +4,4 @@ uihook
 *.deb
 .theos
 uisettingsstats
+obj/
