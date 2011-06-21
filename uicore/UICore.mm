@@ -1,3 +1,5 @@
+#import <UIKit/UIKit.h>
+#import <CoreGraphics/CoreGraphics.h>
 #import <dlfcn.h>
 #import <SpringBoard/SpringBoard.h>
 #include "fakesubstrate.h"
@@ -12,6 +14,7 @@
 void null__(id a) {};
 #define NSLog(x, ...) null__(x)
 #endif
+extern BOOL isPointerToObject(const void *testPointer);
 @interface SBAppSwitcherBarView : UIView {
 }
 +(id)mesg;
@@ -40,8 +43,13 @@ void null__(id a) {};
 + (UISettingsToggleController*)sharedController;
 -(void)load;
 -(CGRect)autoRect;
+-(CGRect)autoRectForToggleId:(NSString*)toggleId;
 -(UIButton*)createToggleWithAction:(SEL)action title:(NSString*)title target:(id)target;
+-(UIButton*)createToggleWithAction:(SEL)action title:(NSString*)title target:(id)target shouldUseTitleAsButtonTitle:(BOOL)hasTitle;
 -(UIImage*)iconWithName:(NSString*)name;
+-(void)setToggleIdentifier:(NSString*)identifier forToggle:(UIButton*)toggle;
+-(BOOL)isToggleShown:(NSString*)toggle;
+-(int)togglePosition:(NSString*)toggleId;
 @end
 static UIButton* triggerButton;
 @interface UISettingsCore : NSObject {
@@ -218,6 +226,11 @@ static UISettingsToggleController* sharedIInstance = nil;
 }
 #pragma mark AddStuff
 -(UIButton*)createToggleWithAction:(SEL)action title:(NSString*)title target:(id)target {
+	NSLog(@"[UISettings] Warning: DEPRECATED METHOD");
+	return [self createToggleWithAction:action title:title target:target shouldUseTitleAsButtonTitle:YES];
+}
+-(UIButton*)createToggleWithAction:(SEL)action title:(NSString*)title target:(id)target shouldUseTitleAsButtonTitle:(BOOL)hasTitle
+{
 	// FIXME: correct this shit
 	id hokr = [UISettingsCore sharedSettings];
 	toggleContainer=MSHookIvar<UIScrollView*>(hokr, "toggleContainer"); // b00m
@@ -235,7 +248,7 @@ static UISettingsToggleController* sharedIInstance = nil;
 	}
 	// Dispatcher
 	UIButton *myButton;
-	if(title==nil){
+	if((!hasTitle)||(!title)){
 		myButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	} else {
 		myButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
@@ -244,8 +257,18 @@ static UISettingsToggleController* sharedIInstance = nil;
 		myButton.titleLabel.numberOfLines = 3; // maximum: 3!
 		myButton.titleLabel.textAlignment = UITextAlignmentCenter;
 	}
-	myButton.frame = [self autoRect];
-	myButton.tag=0;
+	if(title) {
+		[self setToggleIdentifier:title forToggle:myButton];
+	} else {
+		NSLog(@"[UISettings] Warning: DEPRECATED USAGE OF TITLE");
+	}
+	myButton.frame = [self autoRectForToggleId:title];
+	if(![self isToggleShown:title])
+	{
+		[myButton release];
+		return nil;
+	}
+	myButton.tag=(int)[title retain];
 	[myButton setTitle:title forState:UIControlStateNormal];
 	[myButton addTarget:self action:@selector(coreDispatcher:) forControlEvents:UIControlEventTouchUpInside];
 	[toggleContainer addSubview:myButton];
@@ -254,8 +277,19 @@ static UISettingsToggleController* sharedIInstance = nil;
 	[toggleArray addObject:myButton];  
 	return myButton;
 }
+static NSDictionary* togglePref=nil;
+static NSMutableDictionary* toggleDict=nil;
 -(UILabel*)createLabelForButton:(UIButton*)button text:(NSString*)text
 {
+	/*
+	NSString* identifier=(NSString*)button.tag;
+	if((!isPointerToObject(identifier))||[identifier isKindOfClass:[NSString class]]||(![toggleDict objectForKey:identifier)){
+		// You cheated. Gotta use a painfully slow way to retrive the identifier.
+		identifier=[[toggleDict allKeysForObject:button] lastObject];
+	}
+	if(![self isToggleShown:identifier]) return nil;
+	*/
+	if(CGRectIsEmpty(button.frame)) return nil;
 	id hokr = [UISettingsCore sharedSettings];
 	toggleContainer=MSHookIvar<UIScrollView*>(hokr, "toggleContainer"); // b00m
 	UILabel *lbel = [[UILabel alloc] initWithFrame:CGRectMake(0.0, 0.0, 54.0, 24.0)];
@@ -274,18 +308,23 @@ static UISettingsToggleController* sharedIInstance = nil;
 	//lbel.alpha=0.6;
 	return lbel;
 }
--(void)createToggleWithTitle:(NSString*)title andImage:(NSString*)path andSelector:(SEL)selector toTarget:(id)target
+-(UIButton*)createToggleWithTitle:(NSString*)title andImage:(NSString*)path andSelector:(SEL)selector toTarget:(id)target
 {
 	NSAutoreleasePool* apool=[NSAutoreleasePool new];
-	id button=[self createToggleWithAction:selector title:nil target:target];
+	id button=[self createToggleWithAction:selector title:title target:target shouldUseTitleAsButtonTitle:NO];
 	[self createLabelForButton:button text:title];
 	UIImage *image = [self iconWithName:path];
 	[button setImage:image forState:UIControlStateNormal];
 	[apool drain];
+	return button;
 }
 -(CGRect)autoRect {
+	return [self autoRectForToggleId:nil];
+}
+-(CGRect)autoRectForToggleId:(NSString*)toggleId {
+	if(![self isToggleShown:toggleId]) return CGRectZero;
 	toggleContainer.contentSize = CGSizeMake((10+56)*([toggleArray count]+1)+5, toggleContainer.frame.size.height);
-	return CGRectMake((10+56)*([toggleArray count])+5, 0, [objc_getClass("SBIconView") defaultIconImageSize].width, [objc_getClass("SBIconView") defaultIconImageSize].height);
+	return CGRectMake((10+56)*([self togglePosition:toggleId])+5, 0, [objc_getClass("SBIconView") defaultIconImageSize].width, [objc_getClass("SBIconView") defaultIconImageSize].height);
 }
 -(UIImage*)iconWithName:(NSString*)name
 {
@@ -294,4 +333,34 @@ static UISettingsToggleController* sharedIInstance = nil;
 	if(iconFromWinterboard) return iconFromWinterboard;
 	return [[UIImage imageWithContentsOfFile:[@"/Library/UISettings/Icons/" stringByAppendingString:name]] retain];
 }
+-(void)setToggleIdentifier:(NSString*)identifier forToggle:(UIButton*)toggle
+{
+	// >MUST< be an unique identifier for your toggle. Used to hide toggles and/or move them.
+	if((!toggle)||(!identifier)) return;
+	if(!toggleDict) toggleDict=[[NSMutableDictionary alloc] init];
+	[toggleDict setObject:toggle forKey:identifier];
+}
+-(BOOL)isToggleShown:(NSString*)toggleId
+{
+	if(!toggleId) return YES;
+	if(!togglePref) togglePref=[[NSDictionary dictionaryWithContentsOfFile:@"/Library/UISettings/Toggles.plist"] retain];
+	NSDictionary* toggleSettings=(NSDictionary*)[togglePref objectForKey:toggleId];
+	if(!toggleSettings) return YES;
+	id ret=[toggleSettings objectForKey:@"isShown"];
+	if(!ret) return YES;
+	return [ret boolValue];
+}
+-(int)togglePosition:(NSString*)toggleId
+{
+	if(!toggleId) return [toggleArray count];
+        if(!togglePref) togglePref=[[NSDictionary dictionaryWithContentsOfFile:@"/Library/UISettings/Toggles.plist"] retain];
+        NSDictionary* toggleSettings=(NSDictionary*)[togglePref objectForKey:toggleId];
+        if(!toggleSettings) return [toggleArray count];
+	id ret=[toggleSettings objectForKey:@"position"];
+	if(!ret) return [toggleArray count];
+	return [ret intValue];
+}
 @end
+
+
+

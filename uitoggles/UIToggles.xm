@@ -149,19 +149,19 @@ void updateWiFi()
 	
 	wifi_on=[handler iconWithName:@"wifi.png"];
 	wifi_off=[handler iconWithName:@"no_wifi.png"];
-        wifi=[handler createToggleWithAction:@selector(wifi) title:nil target:toggleController];
+        wifi=[handler createToggleWithAction:@selector(wifi) title:@"WiFi" target:toggleController shouldUseTitleAsButtonTitle:NO];
         [handler createLabelForButton:wifi text:@"WiFi"];
 	bluetooth_on=[handler iconWithName:@"bluetooth.png"];
 	bluetooth_off=[handler iconWithName:@"no_bluetooth.png"];
-	bluetooth=[handler createToggleWithAction:@selector(bt) title:nil target:toggleController];
+	bluetooth=[handler createToggleWithAction:@selector(bt) title:@"Bluetooth" target:toggleController shouldUseTitleAsButtonTitle:NO];
 	[handler createLabelForButton:bluetooth text:@"Bluetooth"];
 	loc_on=[handler iconWithName:@"location.png"];
 	loc_off=[handler iconWithName:@"no_location.png"];
-	loc=[handler createToggleWithAction:@selector(location) title:nil target:toggleController];
+	loc=[handler createToggleWithAction:@selector(location) title:@"Location" target:toggleController shouldUseTitleAsButtonTitle:NO];
 	[handler createLabelForButton:loc text:@"Location"];
 	airplane_on=[handler iconWithName:@"airplane.png"];
 	airplane_off=[handler iconWithName:@"no_airplane.png"];
-	airplane=[handler createToggleWithAction:@selector(airplane) title:nil target:toggleController];
+	airplane=[handler createToggleWithAction:@selector(airplane) title:@"Airplane" target:toggleController shouldUseTitleAsButtonTitle:NO];
 	[handler createLabelForButton:airplane text:@"Airplane"];
 
 	// utils

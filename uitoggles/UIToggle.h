@@ -5,5 +5,6 @@
 -(UIButton*)createToggleWithAction:(SEL)action title:(NSString*)title target:(id)target;
 -(void)createToggleWithTitle:(NSString*)title andImage:(NSString*)path andSelector:(SEL)selector toTarget:(id)target;
 -(UIImage*)iconWithName:(NSString*)name;
+-(UIButton*)createToggleWithAction:(SEL)action title:(NSString*)title target:(id)target shouldUseTitleAsButtonTitle:(BOOL)hasTitle;
 @end
 
